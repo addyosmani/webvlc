@@ -1,19 +1,19 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { usePlayer } from '../context/PlayerContext';
-import { getMediaType, getExtension, srtToVttBlob, assToVttBlob } from '../utils/fileUtils';
+import { getMediaType } from '../utils/fileUtils';
 
 export default function MediaEngine() {
   const { state, dispatch, mediaRef, getNextIndex } = usePlayer();
   const {
     playlist, currentIndex, volume, muted, playbackRate,
-    subtitleUrl, isPlaying,
+    subtitleUrl, isVideo,
   } = state;
   const objectUrlRef = useRef(null);
-  const subtitleUrlRef = useRef(null);
+  const pendingPlayRef = useRef(false);
 
   const currentFile = playlist[currentIndex];
 
-  // Create/revoke object URLs for current file
+  // Create/revoke object URLs and set media type for current file
   useEffect(() => {
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current);
@@ -27,20 +27,7 @@ export default function MediaEngine() {
 
     const mediaType = getMediaType(currentFile.name);
     dispatch({ type: 'SET_IS_VIDEO', payload: mediaType === 'video' });
-
-    // Set source on the media element
-    const media = mediaRef.current;
-    if (media) {
-      media.src = url;
-      media.load();
-      // Auto-play when switching tracks
-      const playPromise = media.play();
-      if (playPromise) {
-        playPromise.catch(() => {
-          // Autoplay may be blocked
-        });
-      }
-    }
+    pendingPlayRef.current = true;
 
     return () => {
       if (objectUrlRef.current) {
@@ -48,7 +35,26 @@ export default function MediaEngine() {
         objectUrlRef.current = null;
       }
     };
-  }, [currentFile, dispatch, mediaRef]);
+  }, [currentFile, dispatch]);
+
+  // Set source on the media element after the correct element is rendered
+  useEffect(() => {
+    const media = mediaRef.current;
+    const url = objectUrlRef.current;
+    if (!media || !url || !currentFile) return;
+    if (!pendingPlayRef.current) return;
+    pendingPlayRef.current = false;
+
+    media.src = url;
+    media.load();
+    // Auto-play when switching tracks
+    const playPromise = media.play();
+    if (playPromise) {
+      playPromise.catch(() => {
+        // Autoplay may be blocked
+      });
+    }
+  }, [currentFile, isVideo, mediaRef]);
 
   // Apply volume
   useEffect(() => {
@@ -115,6 +121,28 @@ export default function MediaEngine() {
   const handlePause = useCallback(() => {
     dispatch({ type: 'SET_PLAYING', payload: false });
   }, [dispatch]);
+
+  // Attach event listeners to the media element
+  useEffect(() => {
+    const media = mediaRef.current;
+    if (!media) return;
+
+    media.addEventListener('timeupdate', handleTimeUpdate);
+    media.addEventListener('durationchange', handleDurationChange);
+    media.addEventListener('progress', handleProgress);
+    media.addEventListener('ended', handleEnded);
+    media.addEventListener('play', handlePlay);
+    media.addEventListener('pause', handlePause);
+
+    return () => {
+      media.removeEventListener('timeupdate', handleTimeUpdate);
+      media.removeEventListener('durationchange', handleDurationChange);
+      media.removeEventListener('progress', handleProgress);
+      media.removeEventListener('ended', handleEnded);
+      media.removeEventListener('play', handlePlay);
+      media.removeEventListener('pause', handlePause);
+    };
+  }, [currentFile, isVideo, mediaRef, handleTimeUpdate, handleDurationChange, handleProgress, handleEnded, handlePlay, handlePause]);
 
   // Apply subtitle track
   useEffect(() => {
