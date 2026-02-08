@@ -1,0 +1,235 @@
+.controls {
+  background: var(--vlc-surface);
+  border-top: 1px solid var(--vlc-border);
+  padding: 0;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+/* Progress Bar */
+.progressContainer {
+  position: relative;
+  height: 20px;
+  cursor: pointer;
+  padding: 6px 0;
+  display: flex;
+  align-items: center;
+}
+
+.progressBar {
+  width: 100%;
+  height: 4px;
+  background: var(--vlc-progress-bg);
+  position: relative;
+  transition: height 0.1s;
+}
+
+.progressContainer:hover .progressBar {
+  height: 6px;
+}
+
+.progressBuffered {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--vlc-progress-buffered);
+  transition: width 0.1s;
+}
+
+.progressFilled {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--vlc-accent);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  transition: none;
+}
+
+.progressThumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--vlc-accent);
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.progressContainer:hover .progressThumb {
+  opacity: 1;
+}
+
+.progressTooltip {
+  position: absolute;
+  top: -28px;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Control Buttons Row */
+.controlsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px 6px;
+  gap: 8px;
+}
+
+.leftControls,
+.rightControls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.btn {
+  background: none;
+  border: none;
+  color: var(--vlc-text);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  line-height: 1;
+}
+
+.btn:hover {
+  background: var(--vlc-surface-hover);
+}
+
+.btn.active {
+  color: var(--vlc-accent);
+}
+
+.playBtn {
+  padding: 6px 8px;
+}
+
+.centerInfo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+}
+
+.time {
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--vlc-text);
+  white-space: nowrap;
+}
+
+.timeSep {
+  font-size: 0.8rem;
+  color: var(--vlc-text-dim);
+}
+
+.trackName {
+  font-size: 0.8rem;
+  color: var(--vlc-text-dim);
+  margin-left: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300px;
+}
+
+/* Volume */
+.volumeSlider {
+  width: 80px;
+  height: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.volumeTrack {
+  width: 100%;
+  height: 3px;
+  background: var(--vlc-progress-bg);
+  border-radius: 2px;
+  position: relative;
+}
+
+.volumeFilled {
+  height: 100%;
+  background: var(--vlc-accent);
+  border-radius: 2px;
+  transition: width 0.05s;
+}
+
+/* Speed Menu */
+.speedContainer {
+  position: relative;
+}
+
+.speedLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.speedMenu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 8px;
+  background: var(--vlc-surface);
+  border: 1px solid var(--vlc-border);
+  border-radius: 6px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  min-width: 80px;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+
+.speedOption {
+  background: none;
+  border: none;
+  color: var(--vlc-text);
+  padding: 6px 12px;
+  cursor: pointer;
+  text-align: center;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.speedOption:hover {
+  background: var(--vlc-surface-hover);
+}
+
+.speedOption.active {
+  color: var(--vlc-accent);
+  font-weight: 600;
+}
+
+/* Subtitle indicator */
+.subtitleIndicator {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--vlc-accent);
+  background: rgba(255, 102, 0, 0.15);
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}

@@ -1,0 +1,106 @@
+.viewport {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.video::cue {
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 1.2em;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.4;
+}
+
+.audioContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+}
+
+.visualizer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.audioOverlay {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  pointer-events: none;
+}
+
+.audioIcon {
+  color: var(--vlc-accent);
+  opacity: 0.8;
+}
+
+.audioTitle {
+  font-size: 1.1rem;
+  color: var(--vlc-text);
+  text-align: center;
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--vlc-text-dim);
+  text-align: center;
+  padding: 40px;
+}
+
+.emptyIcon {
+  color: var(--vlc-accent);
+  opacity: 0.5;
+  margin-bottom: 8px;
+}
+
+.empty h2 {
+  font-size: 1.5rem;
+  color: var(--vlc-text);
+  font-weight: 600;
+}
+
+.empty p {
+  font-size: 0.95rem;
+}
+
+.shortcuts {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--vlc-text-dim);
+}

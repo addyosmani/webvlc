@@ -1,0 +1,60 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --vlc-bg: #1e1e1e;
+  --vlc-surface: #2d2d2d;
+  --vlc-surface-hover: #3a3a3a;
+  --vlc-border: #404040;
+  --vlc-text: #e0e0e0;
+  --vlc-text-dim: #888;
+  --vlc-accent: #ff6600;
+  --vlc-accent-hover: #ff8533;
+  --vlc-progress-bg: #444;
+  --vlc-progress-buffered: #666;
+  --vlc-danger: #e04040;
+  --vlc-success: #40b040;
+  --vlc-scrollbar: #555;
+  --vlc-scrollbar-hover: #777;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--vlc-bg);
+  color: var(--vlc-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--vlc-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vlc-scrollbar);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vlc-scrollbar-hover);
+}
+
+::selection {
+  background: var(--vlc-accent);
+  color: #fff;
+}
