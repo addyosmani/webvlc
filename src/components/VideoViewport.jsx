@@ -4,7 +4,7 @@ import styles from './VideoViewport.module.css';
 
 export default function VideoViewport() {
   const { state, dispatch, mediaRef } = usePlayer();
-  const { isVideo, isPlaying, playlist, currentIndex, subtitleUrl } = state;
+  const { isVideo, isPlaying, playlist, currentIndex, subtitleUrl, mediaError } = state;
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const animFrameRef = useRef(null);
@@ -197,6 +197,18 @@ export default function VideoViewport() {
             <div className={styles.audioTitle}>{currentFile.name}</div>
           </div>
           <audio ref={mediaRef} crossOrigin="anonymous" />
+        </div>
+      )}
+      {mediaError && (
+        <div className={styles.errorOverlay}>
+          <div className={styles.errorMessage}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <p>{mediaError}</p>
+          </div>
         </div>
       )}
     </div>

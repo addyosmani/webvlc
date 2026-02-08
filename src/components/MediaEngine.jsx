@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { usePlayer } from '../context/PlayerContext';
-import { getMediaType } from '../utils/fileUtils';
+import { getMediaType, getMimeType, createMediaObjectURL } from '../utils/fileUtils';
 
 export default function MediaEngine() {
   const { state, dispatch, mediaRef, getNextIndex } = usePlayer();
@@ -22,11 +22,12 @@ export default function MediaEngine() {
 
     if (!currentFile) return;
 
-    const url = URL.createObjectURL(currentFile.file);
+    const url = createMediaObjectURL(currentFile.file, currentFile.name);
     objectUrlRef.current = url;
 
     const mediaType = getMediaType(currentFile.name);
     dispatch({ type: 'SET_IS_VIDEO', payload: mediaType === 'video' });
+    dispatch({ type: 'SET_MEDIA_ERROR', payload: null });
     pendingPlayRef.current = true;
 
     return () => {
@@ -45,7 +46,29 @@ export default function MediaEngine() {
     if (!pendingPlayRef.current) return;
     pendingPlayRef.current = false;
 
-    media.src = url;
+    // Remove any previous <source> elements
+    while (media.firstChild && media.firstChild.tagName === 'SOURCE') {
+      media.removeChild(media.firstChild);
+    }
+    media.querySelectorAll('source').forEach(s => s.remove());
+    media.removeAttribute('src');
+
+    // Use a <source> element with explicit MIME type so the browser can
+    // correctly identify the container format for .mov, .mkv, .avi, etc.
+    const mime = getMimeType(currentFile.name);
+    const source = document.createElement('source');
+    source.src = url;
+    if (mime) source.type = mime;
+    // When using <source> elements, error events fire on the source
+    source.addEventListener('error', () => {
+      dispatch({
+        type: 'SET_MEDIA_ERROR',
+        payload: 'The media format or codec is not supported by this browser.',
+      });
+    });
+    // Insert <source> before any existing children (e.g. <track>)
+    media.insertBefore(source, media.firstChild);
+
     media.load();
     // Auto-play when switching tracks
     const playPromise = media.play();
@@ -54,7 +77,7 @@ export default function MediaEngine() {
         // Autoplay may be blocked
       });
     }
-  }, [currentFile, isVideo, mediaRef]);
+  }, [currentFile, isVideo, mediaRef, dispatch]);
 
   // Apply volume
   useEffect(() => {
@@ -122,6 +145,23 @@ export default function MediaEngine() {
     dispatch({ type: 'SET_PLAYING', payload: false });
   }, [dispatch]);
 
+  // Handle media errors (unsupported codec, corrupt file, etc.)
+  const handleError = useCallback(() => {
+    const media = mediaRef.current;
+    if (!media?.error) return;
+    const err = media.error;
+    const messages = {
+      [MediaError.MEDIA_ERR_ABORTED]: 'Playback was aborted.',
+      [MediaError.MEDIA_ERR_NETWORK]: 'A network error occurred while loading the media.',
+      [MediaError.MEDIA_ERR_DECODE]: 'The media file could not be decoded. The codec may not be supported by this browser.',
+      [MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED]: 'The media format or codec is not supported by this browser.',
+    };
+    dispatch({
+      type: 'SET_MEDIA_ERROR',
+      payload: messages[err.code] || 'An unknown playback error occurred.',
+    });
+  }, [dispatch, mediaRef]);
+
   // Attach event listeners to the media element
   useEffect(() => {
     const media = mediaRef.current;
@@ -133,6 +173,7 @@ export default function MediaEngine() {
     media.addEventListener('ended', handleEnded);
     media.addEventListener('play', handlePlay);
     media.addEventListener('pause', handlePause);
+    media.addEventListener('error', handleError);
 
     return () => {
       media.removeEventListener('timeupdate', handleTimeUpdate);
@@ -141,8 +182,9 @@ export default function MediaEngine() {
       media.removeEventListener('ended', handleEnded);
       media.removeEventListener('play', handlePlay);
       media.removeEventListener('pause', handlePause);
+      media.removeEventListener('error', handleError);
     };
-  }, [currentFile, isVideo, mediaRef, handleTimeUpdate, handleDurationChange, handleProgress, handleEnded, handlePlay, handlePause]);
+  }, [currentFile, isVideo, mediaRef, handleTimeUpdate, handleDurationChange, handleProgress, handleEnded, handlePlay, handlePause, handleError]);
 
   // Apply subtitle track
   useEffect(() => {

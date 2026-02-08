@@ -46,6 +46,46 @@ export function getMediaType(filename) {
   return 'unknown';
 }
 
+// Map file extensions to MIME types for better browser codec negotiation
+const MIME_TYPES = {
+  mp4: 'video/mp4',
+  m4v: 'video/mp4',
+  mov: 'video/mp4',
+  webm: 'video/webm',
+  ogv: 'video/ogg',
+  mkv: 'video/x-matroska',
+  avi: 'video/x-msvideo',
+  '3gp': 'video/3gpp',
+  mp3: 'audio/mpeg',
+  wav: 'audio/wav',
+  ogg: 'audio/ogg',
+  flac: 'audio/flac',
+  aac: 'audio/aac',
+  m4a: 'audio/mp4',
+  wma: 'audio/x-ms-wma',
+  opus: 'audio/opus',
+  aiff: 'audio/aiff',
+};
+
+export function getMimeType(filename) {
+  return MIME_TYPES[getExtension(filename)] || '';
+}
+
+/**
+ * Create a blob URL with the correct MIME type for the given file.
+ * Some browsers/OS combos set an empty or incorrect MIME type on the File
+ * object (common for .mov, .mkv, .avi, .m4v). Re-wrapping in a Blob with
+ * the right type lets the browser's media stack identify the container.
+ */
+export function createMediaObjectURL(file, filename) {
+  if (file.type) return URL.createObjectURL(file);
+  const mime = getMimeType(filename);
+  if (mime) {
+    return URL.createObjectURL(new Blob([file], { type: mime }));
+  }
+  return URL.createObjectURL(file);
+}
+
 export function formatTime(seconds) {
   if (!seconds || isNaN(seconds)) return '0:00';
   const h = Math.floor(seconds / 3600);
