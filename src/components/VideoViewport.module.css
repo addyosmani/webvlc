@@ -104,3 +104,34 @@
   font-size: 0.85rem;
   color: var(--vlc-text-dim);
 }
+
+.errorOverlay {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(180, 40, 40, 0.9);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  max-width: 500px;
+  text-align: left;
+  backdrop-filter: blur(4px);
+}
+
+.errorMessage p {
+  margin: 0;
+}
+
+.errorMessage svg {
+  flex-shrink: 0;
+}

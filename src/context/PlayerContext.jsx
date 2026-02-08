@@ -22,6 +22,7 @@ const initialState = {
   isVideo: false,
   isFullscreen: false,
   audioVisualization: true,
+  mediaError: null,
 };
 
 function playerReducer(state, action) {
@@ -32,6 +33,7 @@ function playerReducer(state, action) {
         playlist: action.payload.files,
         currentIndex: action.payload.startIndex ?? 0,
         shuffleOrder: generateShuffleOrder(action.payload.files.length),
+        mediaError: null,
       };
 
     case 'ADD_TO_PLAYLIST':
@@ -79,7 +81,7 @@ function playerReducer(state, action) {
     }
 
     case 'SET_CURRENT_INDEX':
-      return { ...state, currentIndex: action.payload };
+      return { ...state, currentIndex: action.payload, mediaError: null };
 
     case 'SET_PLAYING':
       return { ...state, isPlaying: action.payload };
@@ -127,6 +129,9 @@ function playerReducer(state, action) {
 
     case 'SET_IS_VIDEO':
       return { ...state, isVideo: action.payload };
+
+    case 'SET_MEDIA_ERROR':
+      return { ...state, mediaError: action.payload };
 
     case 'SET_FULLSCREEN':
       return { ...state, isFullscreen: action.payload };

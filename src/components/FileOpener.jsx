@@ -90,7 +90,7 @@ export default function FileOpener({ children }) {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
-    input.accept = 'audio/*,video/*,.srt,.vtt,.ass,.ssa,.sub,.m3u,.m3u8,.pls';
+    input.accept = 'audio/*,video/*,.srt,.vtt,.ass,.ssa,.sub,.m3u,.m3u8,.pls,.mkv,.flac,.ogg,.opus,.mov,.m4v,.avi,.3gp,.aac,.aiff,.wma';
     input.onchange = (e) => {
       const files = Array.from(e.target.files);
       const mediaFiles = files.filter(f => isMedia(f.name))
@@ -142,7 +142,7 @@ export default function FileOpener({ children }) {
         ref={fileInputRef}
         type="file"
         multiple
-        accept="audio/*,video/*,.srt,.vtt,.ass,.ssa,.sub,.m3u,.m3u8,.pls,.mkv,.flac,.ogg,.opus"
+        accept="audio/*,video/*,.srt,.vtt,.ass,.ssa,.sub,.m3u,.m3u8,.pls,.mkv,.flac,.ogg,.opus,.mov,.m4v,.avi,.3gp,.aac,.aiff,.wma"
         style={{ display: 'none' }}
         onChange={(e) => processFiles(e.target.files)}
       />
