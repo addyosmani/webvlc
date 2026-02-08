@@ -2,6 +2,13 @@ import { useEffect, useRef, useCallback } from 'react';
 import { usePlayer } from '../context/PlayerContext';
 import { getMediaType, getMimeType, createMediaObjectURL } from '../utils/fileUtils';
 
+const MEDIA_ERROR_MESSAGES = {
+  1: 'Playback was aborted.',
+  2: 'A network error occurred while loading the media.',
+  3: 'The media file could not be decoded. The codec may not be supported by this browser.',
+  4: 'The media format or codec is not supported by this browser.',
+};
+
 export default function MediaEngine() {
   const { state, dispatch, mediaRef, getNextIndex } = usePlayer();
   const {
@@ -47,9 +54,6 @@ export default function MediaEngine() {
     pendingPlayRef.current = false;
 
     // Remove any previous <source> elements
-    while (media.firstChild && media.firstChild.tagName === 'SOURCE') {
-      media.removeChild(media.firstChild);
-    }
     media.querySelectorAll('source').forEach(s => s.remove());
     media.removeAttribute('src');
 
@@ -149,16 +153,9 @@ export default function MediaEngine() {
   const handleError = useCallback(() => {
     const media = mediaRef.current;
     if (!media?.error) return;
-    const err = media.error;
-    const messages = {
-      [MediaError.MEDIA_ERR_ABORTED]: 'Playback was aborted.',
-      [MediaError.MEDIA_ERR_NETWORK]: 'A network error occurred while loading the media.',
-      [MediaError.MEDIA_ERR_DECODE]: 'The media file could not be decoded. The codec may not be supported by this browser.',
-      [MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED]: 'The media format or codec is not supported by this browser.',
-    };
     dispatch({
       type: 'SET_MEDIA_ERROR',
-      payload: messages[err.code] || 'An unknown playback error occurred.',
+      payload: MEDIA_ERROR_MESSAGES[media.error.code] || 'An unknown playback error occurred.',
     });
   }, [dispatch, mediaRef]);
 
