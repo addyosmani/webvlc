@@ -4,7 +4,10 @@ WebVLC is a modern, web-based media player inspired by the versatility of VLC. I
 
 [**Live Demo**](https://webvlc.addy.ie)
 
+![Image](https://github.com/user-attachments/assets/fb4669f3-d3f8-4dee-8043-0b69650ce09c)
 ![Image](https://github.com/user-attachments/assets/4823dce7-1ec0-4d0a-9360-cff222c2bfaa)
+
+**Note**: If you are looking for a very experimental WASM-port of VLC that runs in the browser, see [vlc.js](https://github.com/addyosmani/vlc.js)
 
 ## ✨ Features
 
