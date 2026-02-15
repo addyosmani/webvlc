@@ -279,9 +279,7 @@ export default function VideoViewport() {
                 onClick={() => setShowPresetSelect(!showPresetSelect)}
                 title="Select preset"
               >
-                {state.currentPresetName
-                  ? state.currentPresetName.substring(0, 50) + (state.currentPresetName.length > 50 ? '…' : '')
-                  : 'Select Preset'}
+                {state.currentPresetName || 'Select Preset'}
               </button>
               <button
                 className={styles.presetNavBtn}
