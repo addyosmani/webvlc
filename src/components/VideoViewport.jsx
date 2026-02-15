@@ -1,17 +1,34 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
+import butterchurn from 'butterchurn';
+import butterchurnPresets from 'butterchurn-presets';
 import { usePlayer } from '../context/PlayerContext';
 import styles from './VideoViewport.module.css';
 
+function getPresets() {
+  const presets = { ...butterchurnPresets };
+  const keys = Object.keys(presets).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  const sorted = {};
+  for (const k of keys) sorted[k] = presets[k];
+  return sorted;
+}
+
+const allPresets = getPresets();
+const presetKeys = Object.keys(allPresets);
+
 export default function VideoViewport() {
   const { state, dispatch, mediaRef } = usePlayer();
-  const { isVideo, isPlaying, playlist, currentIndex, subtitleUrl, mediaError } = state;
+  const { isVideo, isPlaying, playlist, currentIndex, mediaError } = state;
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const animFrameRef = useRef(null);
   const audioContextRef = useRef(null);
-  const analyserRef = useRef(null);
   const sourceRef = useRef(null);
+  const visualizerRef = useRef(null);
+  const presetIndexRef = useRef(-1);
+  const presetIndexHistRef = useRef([]);
+  const cycleIntervalRef = useRef(null);
   const [showControls, setShowControls] = useState(true);
+  const [showPresetSelect, setShowPresetSelect] = useState(false);
   const hideTimerRef = useRef(null);
 
   const currentFile = playlist[currentIndex];
@@ -25,7 +42,79 @@ export default function VideoViewport() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, [dispatch]);
 
-  // Audio visualization
+  const loadPreset = useCallback((index, blendTime = 5.7) => {
+    if (!visualizerRef.current || index < 0 || index >= presetKeys.length) return;
+    presetIndexRef.current = index;
+    const key = presetKeys[index];
+    try {
+      visualizerRef.current.loadPreset(allPresets[key], blendTime);
+    } catch {
+      // Some presets may fail to load; skip silently
+      return;
+    }
+    dispatch({ type: 'SET_PRESET_NAME', payload: key });
+  }, [dispatch]);
+
+  const nextPreset = useCallback((blendTime = 5.7) => {
+    presetIndexHistRef.current.push(presetIndexRef.current);
+    let next;
+    if (state.presetRandom) {
+      next = Math.floor(Math.random() * presetKeys.length);
+    } else {
+      next = (presetIndexRef.current + 1) % presetKeys.length;
+    }
+    loadPreset(next, blendTime);
+  }, [state.presetRandom, loadPreset]);
+
+  const prevPreset = useCallback((blendTime = 5.7) => {
+    let prev;
+    if (presetIndexHistRef.current.length > 0) {
+      prev = presetIndexHistRef.current.pop();
+    } else {
+      prev = ((presetIndexRef.current - 1) + presetKeys.length) % presetKeys.length;
+    }
+    loadPreset(prev, blendTime);
+  }, [loadPreset]);
+
+  // Preset cycling
+  useEffect(() => {
+    if (cycleIntervalRef.current) {
+      clearInterval(cycleIntervalRef.current);
+      cycleIntervalRef.current = null;
+    }
+
+    if (state.presetCycle && state.audioVisualization && !isVideo) {
+      cycleIntervalRef.current = setInterval(() => nextPreset(2.7), state.presetCycleLength * 1000);
+    }
+
+    return () => {
+      if (cycleIntervalRef.current) {
+        clearInterval(cycleIntervalRef.current);
+      }
+    };
+  }, [state.presetCycle, state.presetCycleLength, state.audioVisualization, isVideo, nextPreset]);
+
+  // Keyboard shortcuts for preset navigation
+  useEffect(() => {
+    if (isVideo || !state.audioVisualization) return;
+
+    function handleKeyDown(e) {
+      if (e.key === 'ArrowRight' && e.shiftKey) {
+        nextPreset();
+      } else if (e.key === 'ArrowLeft' && e.shiftKey) {
+        prevPreset();
+      } else if (e.key === 'h' || e.key === 'H') {
+        if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+          nextPreset(0);
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isVideo, state.audioVisualization, nextPreset, prevPreset]);
+
+  // Butterchurn visualization
   useEffect(() => {
     if (isVideo || !state.audioVisualization) {
       if (animFrameRef.current) {
@@ -39,7 +128,7 @@ export default function VideoViewport() {
     const canvas = canvasRef.current;
     if (!media || !canvas || !currentFile) return;
 
-    // Setup audio context and analyser
+    // Setup audio context
     if (!audioContextRef.current) {
       try {
         audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -56,54 +145,65 @@ export default function VideoViewport() {
     if (!sourceRef.current) {
       try {
         sourceRef.current = ctx.createMediaElementSource(media);
+        sourceRef.current.connect(ctx.destination);
       } catch {
         // Already connected
       }
     }
 
-    if (!analyserRef.current) {
-      analyserRef.current = ctx.createAnalyser();
-      analyserRef.current.fftSize = 256;
-      sourceRef.current?.connect(analyserRef.current);
-      analyserRef.current.connect(ctx.destination);
+    // Recreate butterchurn visualizer on every track change to reset
+    // internal WASM state and prevent "float unrepresentable" crashes
+    try {
+      visualizerRef.current = butterchurn.createVisualizer(ctx, canvas, {
+        width: canvas.width || 800,
+        height: canvas.height || 600,
+        pixelRatio: window.devicePixelRatio || 1,
+        textureRatio: 1,
+      });
+      visualizerRef.current.connectAudio(sourceRef.current);
+      const initialIndex = presetIndexRef.current >= 0
+        ? presetIndexRef.current
+        : Math.floor(Math.random() * presetKeys.length);
+      loadPreset(initialIndex, 0);
+    } catch {
+      return;
     }
 
-    const analyser = analyserRef.current;
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    const canvasCtx = canvas.getContext('2d');
+    let cancelled = false;
 
-    function draw() {
-      animFrameRef.current = requestAnimationFrame(draw);
-      analyser.getByteFrequencyData(dataArray);
-
-      const { width, height } = canvas;
-      canvasCtx.fillStyle = '#1e1e1e';
-      canvasCtx.fillRect(0, 0, width, height);
-
-      const barWidth = (width / bufferLength) * 2;
-      let x = 0;
-
-      for (let i = 0; i < bufferLength; i++) {
-        const barHeight = (dataArray[i] / 255) * height * 0.85;
-        const hue = (i / bufferLength) * 30 + 15; // Orange gradient
-        const lightness = 40 + (dataArray[i] / 255) * 20;
-        canvasCtx.fillStyle = `hsl(${hue}, 100%, ${lightness}%)`;
-        canvasCtx.fillRect(x, height - barHeight, barWidth - 1, barHeight);
-        x += barWidth;
+    function render() {
+      if (cancelled) return;
+      animFrameRef.current = requestAnimationFrame(render);
+      try {
+        visualizerRef.current.render();
+      } catch {
+        // Butterchurn can throw "float unrepresentable in integer range"
+        // from WASM during certain presets or audio transitions.
+        // Recover by loading a new preset with no blend.
+        try {
+          const safeIndex = (presetIndexRef.current + 1) % presetKeys.length;
+          loadPreset(safeIndex, 0);
+        } catch {
+          // If recovery also fails, stop rendering
+          cancelled = true;
+          cancelAnimationFrame(animFrameRef.current);
+          animFrameRef.current = null;
+        }
       }
     }
 
-    draw();
+    render();
 
     return () => {
+      cancelled = true;
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
       }
     };
-  }, [isVideo, state.audioVisualization, currentFile, mediaRef]);
+  }, [isVideo, state.audioVisualization, currentFile, mediaRef, loadPreset]);
 
-  // Resize canvas
+  // Resize canvas and update visualizer dimensions
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -113,6 +213,9 @@ export default function VideoViewport() {
       if (container) {
         canvas.width = container.clientWidth;
         canvas.height = container.clientHeight;
+        if (visualizerRef.current) {
+          visualizerRef.current.setRendererSize(container.clientWidth, container.clientHeight);
+        }
       }
     }
 
@@ -187,15 +290,52 @@ export default function VideoViewport() {
         <div className={styles.audioContainer} onClick={handleClick}>
           <canvas ref={canvasRef} className={styles.visualizer} />
           <div className={styles.audioOverlay}>
-            <div className={styles.audioIcon}>
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M9 18V5l12-2v13" />
-                <circle cx="6" cy="18" r="3" />
-                <circle cx="18" cy="16" r="3" />
-              </svg>
-            </div>
             <div className={styles.audioTitle}>{currentFile.name}</div>
           </div>
+          {state.audioVisualization && (
+            <div className={styles.presetControls} onClick={(e) => e.stopPropagation()}>
+              <button
+                className={styles.presetNavBtn}
+                onClick={prevPreset}
+                title="Previous preset (Shift+←)"
+              >◀</button>
+              <button
+                className={styles.presetToggle}
+                onClick={() => setShowPresetSelect(!showPresetSelect)}
+                title="Select preset"
+              >
+                {state.currentPresetName || 'Select Preset'}
+              </button>
+              <button
+                className={styles.presetNavBtn}
+                onClick={() => nextPreset()}
+                title="Next preset (Shift+→)"
+              >▶</button>
+              {showPresetSelect && (
+                <div className={styles.presetDropdown}>
+                  <div className={styles.presetDropdownHeader}>
+                    <span>Presets ({presetKeys.length})</span>
+                    <button onClick={() => setShowPresetSelect(false)}>✕</button>
+                  </div>
+                  <div className={styles.presetList}>
+                    {presetKeys.map((key, i) => (
+                      <button
+                        key={key}
+                        className={`${styles.presetItem} ${key === state.currentPresetName ? styles.presetItemActive : ''}`}
+                        onClick={() => {
+                          presetIndexHistRef.current.push(presetIndexRef.current);
+                          loadPreset(i, 5.7);
+                          setShowPresetSelect(false);
+                        }}
+                      >
+                        {key}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           <audio ref={mediaRef} crossOrigin="anonymous" />
         </div>
       )}

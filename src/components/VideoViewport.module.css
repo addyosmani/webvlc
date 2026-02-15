@@ -70,6 +70,134 @@
   border-radius: 6px;
 }
 
+.presetControls {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 6px;
+  padding: 4px;
+  backdrop-filter: blur(4px);
+  max-width: 90%;
+}
+
+.presetNavBtn {
+  background: none;
+  border: none;
+  color: var(--vlc-text);
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.presetNavBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  opacity: 1;
+}
+
+.presetToggle {
+  background: none;
+  border: none;
+  color: var(--vlc-text);
+  cursor: pointer;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300px;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.presetToggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+}
+
+.presetDropdown {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
+  background: var(--vlc-surface);
+  border: 1px solid var(--vlc-border);
+  border-radius: 8px;
+  width: 340px;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+
+.presetDropdownHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--vlc-border);
+  font-size: 0.8rem;
+  color: var(--vlc-text-dim);
+  flex-shrink: 0;
+}
+
+.presetDropdownHeader button {
+  background: none;
+  border: none;
+  color: var(--vlc-text-dim);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.presetDropdownHeader button:hover {
+  background: var(--vlc-surface-hover);
+  color: var(--vlc-text);
+}
+
+.presetList {
+  overflow-y: auto;
+  flex: 1;
+  padding: 4px;
+}
+
+.presetItem {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--vlc-text);
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  border-radius: 4px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.presetItem:hover {
+  background: var(--vlc-surface-hover);
+}
+
+.presetItemActive {
+  background: rgba(255, 135, 0, 0.2);
+  color: var(--vlc-accent);
+}
+
 .empty {
   display: flex;
   flex-direction: column;

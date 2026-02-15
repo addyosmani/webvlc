@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "butterchurn": "^3.0.0-beta.5",
+    "butterchurn-presets": "^3.0.0-beta.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

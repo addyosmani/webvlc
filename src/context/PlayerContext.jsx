@@ -22,6 +22,10 @@ const initialState = {
   isVideo: false,
   isFullscreen: false,
   audioVisualization: true,
+  presetCycle: true,
+  presetCycleLength: 15,
+  presetRandom: true,
+  currentPresetName: '',
   mediaError: null,
 };
 
@@ -138,6 +142,18 @@ function playerReducer(state, action) {
 
     case 'TOGGLE_VISUALIZATION':
       return { ...state, audioVisualization: !state.audioVisualization };
+
+    case 'SET_PRESET_NAME':
+      return { ...state, currentPresetName: action.payload };
+
+    case 'TOGGLE_PRESET_CYCLE':
+      return { ...state, presetCycle: !state.presetCycle };
+
+    case 'SET_PRESET_CYCLE_LENGTH':
+      return { ...state, presetCycleLength: action.payload };
+
+    case 'TOGGLE_PRESET_RANDOM':
+      return { ...state, presetRandom: !state.presetRandom };
 
     default:
       return state;
