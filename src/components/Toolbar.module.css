@@ -102,3 +102,18 @@
   color: var(--vlc-accent);
   letter-spacing: 0.5px;
 }
+
+.inlineBtn {
+  background: none;
+  border: 1px solid var(--vlc-border);
+  color: var(--vlc-text);
+  cursor: pointer;
+  padding: 0 6px;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.inlineBtn:hover {
+  background: var(--vlc-surface-hover);
+}

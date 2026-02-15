@@ -161,6 +161,24 @@ export default function Toolbar({ onOpenFiles, onOpenDirectory, onAddFiles, show
               <button className={styles.dropdownItem} onClick={menuAction(() => dispatch({ type: 'TOGGLE_VISUALIZATION' }))}>
                 <span>{state.audioVisualization ? '✓ ' : ''}Audio Visualization</span>
               </button>
+              {state.audioVisualization && (
+                <>
+                  <div className={styles.separator} />
+                  <button className={styles.dropdownItem} onClick={menuAction(() => dispatch({ type: 'TOGGLE_PRESET_CYCLE' }))}>
+                    <span>{state.presetCycle ? '✓ ' : ''}Cycle Presets</span>
+                  </button>
+                  <button className={styles.dropdownItem} onClick={menuAction(() => dispatch({ type: 'TOGGLE_PRESET_RANDOM' }))}>
+                    <span>{state.presetRandom ? '✓ ' : ''}Random Presets</span>
+                  </button>
+                  <div className={styles.dropdownInfo}>
+                    Cycle: {state.presetCycleLength}s
+                    {' · '}
+                    <button className={styles.inlineBtn} onClick={(e) => { e.stopPropagation(); dispatch({ type: 'SET_PRESET_CYCLE_LENGTH', payload: Math.max(5, state.presetCycleLength - 5) }); }}>−</button>
+                    {' '}
+                    <button className={styles.inlineBtn} onClick={(e) => { e.stopPropagation(); dispatch({ type: 'SET_PRESET_CYCLE_LENGTH', payload: Math.min(120, state.presetCycleLength + 5) }); }}>+</button>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
