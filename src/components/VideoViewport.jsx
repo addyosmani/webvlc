@@ -46,7 +46,12 @@ export default function VideoViewport() {
     if (!visualizerRef.current || index < 0 || index >= presetKeys.length) return;
     presetIndexRef.current = index;
     const key = presetKeys[index];
-    visualizerRef.current.loadPreset(allPresets[key], blendTime);
+    try {
+      visualizerRef.current.loadPreset(allPresets[key], blendTime);
+    } catch {
+      // Some presets may fail to load; skip silently
+      return;
+    }
     dispatch({ type: 'SET_PRESET_NAME', payload: key });
   }, [dispatch]);
 
@@ -146,31 +151,51 @@ export default function VideoViewport() {
       }
     }
 
-    // Create butterchurn visualizer
-    if (!visualizerRef.current) {
-      try {
-        visualizerRef.current = butterchurn.createVisualizer(ctx, canvas, {
-          width: canvas.width || 800,
-          height: canvas.height || 600,
-          pixelRatio: window.devicePixelRatio || 1,
-          textureRatio: 1,
-        });
-        visualizerRef.current.connectAudio(sourceRef.current);
-        const initialIndex = Math.floor(Math.random() * presetKeys.length);
-        loadPreset(initialIndex, 0);
-      } catch {
-        return;
-      }
+    // Recreate butterchurn visualizer on every track change to reset
+    // internal WASM state and prevent "float unrepresentable" crashes
+    try {
+      visualizerRef.current = butterchurn.createVisualizer(ctx, canvas, {
+        width: canvas.width || 800,
+        height: canvas.height || 600,
+        pixelRatio: window.devicePixelRatio || 1,
+        textureRatio: 1,
+      });
+      visualizerRef.current.connectAudio(sourceRef.current);
+      const initialIndex = presetIndexRef.current >= 0
+        ? presetIndexRef.current
+        : Math.floor(Math.random() * presetKeys.length);
+      loadPreset(initialIndex, 0);
+    } catch {
+      return;
     }
 
+    let cancelled = false;
+
     function render() {
+      if (cancelled) return;
       animFrameRef.current = requestAnimationFrame(render);
-      visualizerRef.current.render();
+      try {
+        visualizerRef.current.render();
+      } catch {
+        // Butterchurn can throw "float unrepresentable in integer range"
+        // from WASM during certain presets or audio transitions.
+        // Recover by loading a new preset with no blend.
+        try {
+          const safeIndex = (presetIndexRef.current + 1) % presetKeys.length;
+          loadPreset(safeIndex, 0);
+        } catch {
+          // If recovery also fails, stop rendering
+          cancelled = true;
+          cancelAnimationFrame(animFrameRef.current);
+          animFrameRef.current = null;
+        }
+      }
     }
 
     render();
 
     return () => {
+      cancelled = true;
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current);
         animFrameRef.current = null;
