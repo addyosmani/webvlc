@@ -17,7 +17,7 @@ const presetKeys = Object.keys(allPresets);
 
 export default function VideoViewport() {
   const { state, dispatch, mediaRef } = usePlayer();
-  const { isVideo, isPlaying, playlist, currentIndex, mediaError } = state;
+  const { isVideo, isPlaying, playlist, currentIndex, mediaError, subtitleUrl } = state;
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const animFrameRef = useRef(null);
@@ -29,6 +29,7 @@ export default function VideoViewport() {
   const cycleIntervalRef = useRef(null);
   const [showControls, setShowControls] = useState(true);
   const [showPresetSelect, setShowPresetSelect] = useState(false);
+  const [activeSubtitle, setActiveSubtitle] = useState('');
   const hideTimerRef = useRef(null);
 
   const currentFile = playlist[currentIndex];
@@ -224,6 +225,62 @@ export default function VideoViewport() {
     return () => window.removeEventListener('resize', resize);
   }, [isVideo]);
 
+  // Listen for subtitle cue changes on the audio element
+  useEffect(() => {
+    if (isVideo || !subtitleUrl) {
+      return () => setActiveSubtitle('');
+    }
+
+    const media = mediaRef.current;
+    if (!media) {
+      return () => setActiveSubtitle('');
+    }
+
+    function findSubtitleTrack() {
+      for (let i = 0; i < media.textTracks.length; i++) {
+        if (media.textTracks[i].kind === 'subtitles') return media.textTracks[i];
+      }
+      return null;
+    }
+
+    function handleCueChange() {
+      const track = findSubtitleTrack();
+      if (track && track.activeCues && track.activeCues.length > 0) {
+        const texts = Array.from(track.activeCues).map(cue => cue.text);
+        setActiveSubtitle(texts.join('\n'));
+      } else {
+        setActiveSubtitle('');
+      }
+    }
+
+    // Wait for the text track to be available
+    function attachTrackListener() {
+      const track = findSubtitleTrack();
+      if (track) {
+        track.mode = 'hidden'; // hidden so we render manually, but cues still fire
+        track.addEventListener('cuechange', handleCueChange);
+        return () => track.removeEventListener('cuechange', handleCueChange);
+      }
+      return undefined;
+    }
+
+    let cleanup = attachTrackListener();
+
+    // If track isn't loaded yet, listen for addtrack event
+    function handleAddTrack() {
+      if (cleanup) cleanup();
+      cleanup = attachTrackListener();
+    }
+
+    media.textTracks.addEventListener('addtrack', handleAddTrack);
+
+    return () => {
+      if (cleanup) cleanup();
+      media.textTracks.removeEventListener('addtrack', handleAddTrack);
+      setActiveSubtitle('');
+    };
+  }, [isVideo, subtitleUrl, mediaRef, currentIndex]);
+
   // Handle mouse movement for auto-hiding controls in video mode
   const handleMouseMove = useCallback(() => {
     setShowControls(true);
@@ -334,6 +391,11 @@ export default function VideoViewport() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+          {activeSubtitle && (
+            <div className={styles.subtitleOverlay}>
+              <span className={styles.subtitleText}>{activeSubtitle}</span>
             </div>
           )}
           <audio ref={mediaRef} crossOrigin="anonymous" />
