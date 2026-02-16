@@ -27,6 +27,8 @@ const initialState = {
   presetRandom: true,
   currentPresetName: '',
   mediaError: null,
+  showTrackTitle: true,
+  showPresetControls: true,
 };
 
 function playerReducer(state, action) {
@@ -154,6 +156,12 @@ function playerReducer(state, action) {
 
     case 'TOGGLE_PRESET_RANDOM':
       return { ...state, presetRandom: !state.presetRandom };
+
+    case 'TOGGLE_TRACK_TITLE':
+      return { ...state, showTrackTitle: !state.showTrackTitle };
+
+    case 'TOGGLE_PRESET_CONTROLS':
+      return { ...state, showPresetControls: !state.showPresetControls };
 
     default:
       return state;

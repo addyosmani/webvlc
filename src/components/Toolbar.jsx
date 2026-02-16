@@ -224,6 +224,12 @@ export default function Toolbar({ onOpenFiles, onOpenDirectory, onAddFiles, show
               <button className={styles.dropdownItem} onClick={menuAction(onTogglePlaylist)}>
                 <span>{showPlaylist ? '✓ ' : ''}Playlist</span>
               </button>
+              <button className={styles.dropdownItem} onClick={menuAction(() => dispatch({ type: 'TOGGLE_TRACK_TITLE' }))}>
+                <span>{state.showTrackTitle ? '✓ ' : ''}Track Title</span>
+              </button>
+              <button className={styles.dropdownItem} onClick={menuAction(() => dispatch({ type: 'TOGGLE_PRESET_CONTROLS' }))}>
+                <span>{state.showPresetControls ? '✓ ' : ''}Preset Controls</span>
+              </button>
               {state.isVideo && (
                 <>
                   <div className={styles.separator} />
