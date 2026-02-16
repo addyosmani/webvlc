@@ -346,10 +346,12 @@ export default function VideoViewport() {
       ) : (
         <div className={styles.audioContainer} onClick={handleClick}>
           <canvas ref={canvasRef} className={styles.visualizer} />
-          <div className={styles.audioOverlay}>
-            <div className={styles.audioTitle}>{currentFile.name}</div>
-          </div>
-          {state.audioVisualization && (
+          {state.showTrackTitle && (
+            <div className={styles.audioOverlay}>
+              <div className={styles.audioTitle}>{currentFile.name}</div>
+            </div>
+          )}
+          {state.audioVisualization && state.showPresetControls && (
             <div className={styles.presetControls} onClick={(e) => e.stopPropagation()}>
               <button
                 className={styles.presetNavBtn}
