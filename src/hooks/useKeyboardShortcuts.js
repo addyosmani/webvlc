@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { usePlayer } from '../context/PlayerContext';
+import { savePlaylistAsM3U } from '../utils/fileUtils';
 
 export function useKeyboardShortcuts() {
   const { state, dispatch, mediaRef, getNextIndex } = usePlayer();
@@ -89,7 +90,10 @@ export function useKeyboardShortcuts() {
 
         case 's':
         case 'S':
-          if (!e.ctrlKey && !e.metaKey) {
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            savePlaylistAsM3U(state.playlist);
+          } else {
             dispatch({ type: 'TOGGLE_SHUFFLE' });
           }
           break;

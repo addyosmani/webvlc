@@ -6,9 +6,11 @@ import {
 } from '../utils/fileUtils';
 
 export default function FileOpener({ children }) {
-  const { dispatch } = usePlayer();
+  const { state, dispatch } = usePlayer();
   const fileInputRef = useRef(null);
   const dirInputRef = useRef(null);
+  const playlistRef = useRef(state.playlist);
+  playlistRef.current = state.playlist;
 
   const processFiles = useCallback(async (fileList) => {
     const files = Array.from(fileList);
@@ -55,10 +57,35 @@ export default function FileOpener({ children }) {
           break; // Only use first playlist file
         }
       }
+    } else if (playlistFiles.length > 0) {
+      // Standalone playlist file opened without media files — populate the
+      // playlist with entry names. The user can then add the actual media
+      // files via drag & drop, Open Directory, or Add to Playlist, and they
+      // will be automatically matched to the playlist entries.
+      const plFile = playlistFiles[0];
+      const text = await plFile.text();
+      const ext = getExtension(plFile.name);
+      const entries = ext === 'pls' ? parsePLS(text) : parseM3U(text);
+
+      if (entries.length > 0) {
+        const playlistEntries = entries.map(entry => ({
+          file: null,
+          name: entry.path.split('/').pop().split('\\').pop(),
+          size: 0,
+        }));
+        dispatch({ type: 'SET_PLAYLIST', payload: { files: playlistEntries, startIndex: 0 } });
+      }
     } else if (mediaFiles.length > 0) {
-      // Sort by name for a natural order
-      mediaFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-      dispatch({ type: 'SET_PLAYLIST', payload: { files: mediaFiles, startIndex: 0 } });
+      // Check if the current playlist has unresolved entries (from M3U loading)
+      const hasUnresolved = playlistRef.current.some(item => !item.file);
+      if (hasUnresolved) {
+        // Use ADD_TO_PLAYLIST which resolves placeholder entries by filename
+        dispatch({ type: 'ADD_TO_PLAYLIST', payload: mediaFiles });
+      } else {
+        // Sort by name for a natural order
+        mediaFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+        dispatch({ type: 'SET_PLAYLIST', payload: { files: mediaFiles, startIndex: 0 } });
+      }
     }
 
     // Handle subtitle files

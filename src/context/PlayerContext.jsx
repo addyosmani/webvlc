@@ -42,14 +42,26 @@ function playerReducer(state, action) {
         mediaError: null,
       };
 
-    case 'ADD_TO_PLAYLIST':
-      const newPlaylist = [...state.playlist, ...action.payload];
+    case 'ADD_TO_PLAYLIST': {
+      // When adding files, try to resolve any existing placeholder entries
+      // (from standalone M3U loading) by matching filenames.
+      const incoming = action.payload;
+      const resolved = state.playlist.map(item => {
+        if (item.file) return item; // Already has file data
+        const match = incoming.find(f => f.name === item.name);
+        return match || item;
+      });
+      // Collect incoming files that weren't used to resolve placeholders
+      const resolvedNames = new Set(resolved.filter(i => i.file).map(i => i.name));
+      const extras = incoming.filter(f => !resolvedNames.has(f.name));
+      const newPlaylist = [...resolved, ...extras];
       return {
         ...state,
         playlist: newPlaylist,
         currentIndex: state.currentIndex === -1 ? 0 : state.currentIndex,
         shuffleOrder: generateShuffleOrder(newPlaylist.length),
       };
+    }
 
     case 'REMOVE_FROM_PLAYLIST': {
       const filtered = state.playlist.filter((_, i) => i !== action.payload);

@@ -29,6 +29,14 @@ export default function MediaEngine() {
 
     if (!currentFile) return;
 
+    if (!currentFile.file) {
+      dispatch({
+        type: 'SET_MEDIA_ERROR',
+        payload: 'Media file not loaded yet. Use Open Directory or drag & drop the folder containing your media files.',
+      });
+      return;
+    }
+
     const url = createMediaObjectURL(currentFile.file, currentFile.name);
     objectUrlRef.current = url;
 
