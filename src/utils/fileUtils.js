@@ -243,6 +243,32 @@ export function assToVttBlob(assText) {
   return URL.createObjectURL(new Blob([vtt], { type: 'text/vtt' }));
 }
 
+// Generate a valid M3U playlist from a list of playlist entries
+export function generateM3U(playlist) {
+  let m3u = '#EXTM3U\n';
+  for (const item of playlist) {
+    const title = item.name || 'Unknown';
+    m3u += `#EXTINF:-1,${title}\n`;
+    m3u += `${item.name}\n`;
+  }
+  return m3u;
+}
+
+// Trigger a download of the current playlist as an M3U file
+export function savePlaylistAsM3U(playlist) {
+  if (!playlist || playlist.length === 0) return;
+  const content = generateM3U(playlist);
+  const blob = new Blob([content], { type: 'audio/x-mpegurl' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'playlist.m3u';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 // Parse M3U/M3U8 playlist files - returns array of filenames
 export function parseM3U(text) {
   const lines = text.replace(/\r\n/g, '\n').split('\n');

@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { usePlayer } from '../context/PlayerContext';
-import { isSubtitle, getExtension, srtToVttBlob, assToVttBlob } from '../utils/fileUtils';
+import { isSubtitle, getExtension, srtToVttBlob, assToVttBlob, savePlaylistAsM3U } from '../utils/fileUtils';
 import styles from './Toolbar.module.css';
 
 export default function Toolbar({ onOpenFiles, onOpenDirectory, onAddFiles, showPlaylist, onTogglePlaylist }) {
@@ -78,6 +78,14 @@ export default function Toolbar({ onOpenFiles, onOpenDirectory, onAddFiles, show
                 <span>Add to Playlist...</span>
               </button>
               <div className={styles.separator} />
+              <button
+                className={styles.dropdownItem}
+                disabled={state.playlist.length === 0}
+                onClick={menuAction(() => savePlaylistAsM3U(state.playlist))}
+              >
+                <span>Save Playlist</span>
+                <span className={styles.shortcut}>Ctrl+S</span>
+              </button>
               <button className={styles.dropdownItem} onClick={menuAction(() => dispatch({ type: 'CLEAR_PLAYLIST' }))}>
                 <span>Clear Playlist</span>
               </button>
