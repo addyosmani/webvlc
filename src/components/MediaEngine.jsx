@@ -32,7 +32,7 @@ export default function MediaEngine() {
     if (!currentFile.file) {
       dispatch({
         type: 'SET_MEDIA_ERROR',
-        payload: 'No file data available. Open the media file alongside the playlist to play it.',
+        payload: 'Media file not loaded yet. Use Open Directory or drag & drop the folder containing your media files.',
       });
       return;
     }
