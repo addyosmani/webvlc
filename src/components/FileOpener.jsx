@@ -56,22 +56,46 @@ export default function FileOpener({ children }) {
         }
       }
     } else if (playlistFiles.length > 0) {
-      // Standalone playlist file opened without media files
+      // Standalone playlist file opened without media files — the browser
+      // can't resolve file paths from the M3U, so prompt the user to select
+      // the directory containing the referenced media files.
       const plFile = playlistFiles[0];
       const text = await plFile.text();
       const ext = getExtension(plFile.name);
       const entries = ext === 'pls' ? parsePLS(text) : parseM3U(text);
 
       if (entries.length > 0) {
-        // Entries loaded from a standalone playlist file don't have actual File
-        // blobs — they are placeholders. MediaEngine shows a helpful message
-        // when the user tries to play one of these entries.
-        const playlistEntries = entries.map(entry => ({
-          file: null,
-          name: entry.path.split('/').pop().split('\\').pop(),
-          size: 0,
-        }));
-        dispatch({ type: 'SET_PLAYLIST', payload: { files: playlistEntries, startIndex: 0 } });
+        const dirInput = document.createElement('input');
+        dirInput.type = 'file';
+        dirInput.setAttribute('webkitdirectory', '');
+        dirInput.setAttribute('directory', '');
+        dirInput.multiple = true;
+        dirInput.onchange = (e) => {
+          const dirFiles = Array.from(e.target.files);
+          const dirMediaFiles = dirFiles
+            .filter(f => isMedia(f.name))
+            .map(f => ({ file: f, name: f.name, size: f.size }));
+
+          if (dirMediaFiles.length > 0) {
+            const orderedFiles = [];
+            for (const entry of entries) {
+              const entryName = entry.path.split('/').pop().split('\\').pop();
+              const match = dirMediaFiles.find(mf =>
+                mf.name === entryName || mf.name.includes(entryName) || entryName.includes(mf.name)
+              );
+              if (match && !orderedFiles.includes(match)) {
+                orderedFiles.push(match);
+              }
+            }
+            for (const mf of dirMediaFiles) {
+              if (!orderedFiles.includes(mf)) {
+                orderedFiles.push(mf);
+              }
+            }
+            dispatch({ type: 'SET_PLAYLIST', payload: { files: orderedFiles, startIndex: 0 } });
+          }
+        };
+        dirInput.click();
       }
     } else if (mediaFiles.length > 0) {
       // Sort by name for a natural order
