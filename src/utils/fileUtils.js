@@ -263,9 +263,7 @@ export function savePlaylistAsM3U(playlist) {
   const a = document.createElement('a');
   a.href = url;
   a.download = 'playlist.m3u';
-  document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
 
