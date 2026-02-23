@@ -55,6 +55,24 @@ export default function FileOpener({ children }) {
           break; // Only use first playlist file
         }
       }
+    } else if (playlistFiles.length > 0) {
+      // Standalone playlist file opened without media files
+      const plFile = playlistFiles[0];
+      const text = await plFile.text();
+      const ext = getExtension(plFile.name);
+      const entries = ext === 'pls' ? parsePLS(text) : parseM3U(text);
+
+      if (entries.length > 0) {
+        // Entries loaded from a standalone playlist file don't have actual File
+        // blobs — they are placeholders. MediaEngine shows a helpful message
+        // when the user tries to play one of these entries.
+        const playlistEntries = entries.map(entry => ({
+          file: null,
+          name: entry.path.split('/').pop().split('\\').pop(),
+          size: 0,
+        }));
+        dispatch({ type: 'SET_PLAYLIST', payload: { files: playlistEntries, startIndex: 0 } });
+      }
     } else if (mediaFiles.length > 0) {
       // Sort by name for a natural order
       mediaFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));

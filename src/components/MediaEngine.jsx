@@ -29,6 +29,14 @@ export default function MediaEngine() {
 
     if (!currentFile) return;
 
+    if (!currentFile.file) {
+      dispatch({
+        type: 'SET_MEDIA_ERROR',
+        payload: 'No file data available. Open the media file alongside the playlist to play it.',
+      });
+      return;
+    }
+
     const url = createMediaObjectURL(currentFile.file, currentFile.name);
     objectUrlRef.current = url;
 
