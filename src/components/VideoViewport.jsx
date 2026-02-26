@@ -1,11 +1,12 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import butterchurn from 'butterchurn';
 import butterchurnPresets from 'butterchurn-presets';
+import customPresets from '../../custom-presets';
 import { usePlayer } from '../context/PlayerContext';
 import styles from './VideoViewport.module.css';
 
 function getPresets() {
-  const presets = { ...butterchurnPresets };
+  const presets = { ...customPresets, ...butterchurnPresets };
   const keys = Object.keys(presets).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   const sorted = {};
   for (const k of keys) sorted[k] = presets[k];
