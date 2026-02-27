@@ -26,6 +26,7 @@ const initialState = {
   presetCycleLength: 15,
   presetRandom: true,
   currentPresetName: '',
+  requestedPresetKey: null,
   mediaError: null,
   showTrackTitle: true,
   showPresetControls: true,
@@ -147,6 +148,12 @@ function playerReducer(state, action) {
 
     case 'SET_PRESET_NAME':
       return { ...state, currentPresetName: action.payload };
+
+    case 'REQUEST_PRESET':
+      return { ...state, requestedPresetKey: action.payload };
+
+    case 'CLEAR_REQUESTED_PRESET':
+      return { ...state, requestedPresetKey: null };
 
     case 'TOGGLE_PRESET_CYCLE':
       return { ...state, presetCycle: !state.presetCycle };

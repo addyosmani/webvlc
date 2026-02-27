@@ -1,16 +1,19 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { usePlayer } from '../context/PlayerContext';
+import { presetKeys } from '../presets';
 import { isSubtitle, getExtension, srtToVttBlob, assToVttBlob } from '../utils/fileUtils';
 import styles from './Toolbar.module.css';
 
 export default function Toolbar({ onOpenFiles, onOpenDirectory, onAddFiles, showPlaylist, onTogglePlaylist }) {
   const { state, dispatch } = usePlayer();
   const [openMenu, setOpenMenu] = useState(null);
+  const [showVisualizerSub, setShowVisualizerSub] = useState(false);
   const menuRef = useRef(null);
 
   const handleClickOutside = useCallback((e) => {
     if (menuRef.current && !menuRef.current.contains(e.target)) {
       setOpenMenu(null);
+      setShowVisualizerSub(false);
     }
   }, []);
 
@@ -130,6 +133,42 @@ export default function Toolbar({ onOpenFiles, onOpenDirectory, onAddFiles, show
                 <span>Faster</span>
                 <span className={styles.shortcut}>]</span>
               </button>
+              {state.audioVisualization && (
+                <>
+                  <div className={styles.separator} />
+                  <div className={styles.submenuContainer}>
+                    <button
+                      className={styles.dropdownItem}
+                      onClick={() => setShowVisualizerSub(!showVisualizerSub)}
+                    >
+                      <span>Visualizer</span>
+                      <span className={styles.submenuArrow}>▸</span>
+                    </button>
+                    {showVisualizerSub && (
+                      <div className={styles.submenu}>
+                        <div className={styles.submenuHeader}>
+                          <span>Presets ({presetKeys.length})</span>
+                        </div>
+                        <div className={styles.submenuList}>
+                          {presetKeys.map((key) => (
+                            <button
+                              key={key}
+                              className={`${styles.dropdownItem} ${key === state.currentPresetName ? styles.submenuItemActive : ''}`}
+                              onClick={() => {
+                                dispatch({ type: 'REQUEST_PRESET', payload: key });
+                                setShowVisualizerSub(false);
+                                setOpenMenu(null);
+                              }}
+                            >
+                              <span>{key}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

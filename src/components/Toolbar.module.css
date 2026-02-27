@@ -117,3 +117,45 @@
 .inlineBtn:hover {
   background: var(--vlc-surface-hover);
 }
+
+.submenuContainer {
+  position: relative;
+}
+
+.submenuArrow {
+  color: var(--vlc-text-dim);
+  font-size: 0.72rem;
+  margin-left: 16px;
+}
+
+.submenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin-left: 2px;
+  background: var(--vlc-surface);
+  border: 1px solid var(--vlc-border);
+  border-radius: 6px;
+  min-width: 280px;
+  padding: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+}
+
+.submenuHeader {
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  color: var(--vlc-text-dim);
+  border-bottom: 1px solid var(--vlc-border);
+  margin-bottom: 4px;
+}
+
+.submenuList {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.submenuItemActive {
+  background: var(--vlc-surface-hover);
+  color: var(--vlc-accent);
+}
