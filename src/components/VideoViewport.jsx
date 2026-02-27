@@ -1,19 +1,8 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import butterchurn from 'butterchurn';
-import butterchurnPresets from 'butterchurn-presets';
+import { allPresets, presetKeys } from '../presets';
 import { usePlayer } from '../context/PlayerContext';
 import styles from './VideoViewport.module.css';
-
-function getPresets() {
-  const presets = { ...butterchurnPresets };
-  const keys = Object.keys(presets).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-  const sorted = {};
-  for (const k of keys) sorted[k] = presets[k];
-  return sorted;
-}
-
-const allPresets = getPresets();
-const presetKeys = Object.keys(allPresets);
 
 export default function VideoViewport() {
   const { state, dispatch, mediaRef } = usePlayer();
@@ -94,6 +83,17 @@ export default function VideoViewport() {
       }
     };
   }, [state.presetCycle, state.presetCycleLength, state.audioVisualization, isVideo, nextPreset]);
+
+  // Handle preset selection from Playback menu
+  useEffect(() => {
+    if (!state.requestedPresetKey) return;
+    const index = presetKeys.indexOf(state.requestedPresetKey);
+    if (index !== -1 && visualizerRef.current) {
+      presetIndexHistRef.current.push(presetIndexRef.current);
+      loadPreset(index, 5.7);
+    }
+    dispatch({ type: 'CLEAR_REQUESTED_PRESET' });
+  }, [state.requestedPresetKey, loadPreset, dispatch]);
 
   // Keyboard shortcuts for preset navigation
   useEffect(() => {
